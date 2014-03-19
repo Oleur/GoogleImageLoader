@@ -1,0 +1,66 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".SearchImageActivity" >
+
+    <uk.co.senab.actionbarpulltorefresh.library.PullToRefreshLayout
+	    android:id="@+id/ptr_layout"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent">
+    
+		<GridView
+	        android:id="@android:id/list"
+	        android:layout_width="match_parent"
+	        android:layout_height="match_parent"
+	        android:numColumns="3" />
+
+	    <TextView
+	        android:id="@android:id/empty"
+	        android:layout_width="match_parent"
+	        android:layout_height="match_parent"
+	        android:background="@android:color/transparent"
+	        android:gravity="center"
+	        android:visibility="visible" />
+    
+    </uk.co.senab.actionbarpulltorefresh.library.PullToRefreshLayout>
+    
+    <RelativeLayout
+	    android:id="@+id/suggestion_container"
+	    android:background="#ffffff"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentBottom="true"
+	    android:layout_alignParentLeft="true"
+	    android:layout_alignParentRight="true"
+	    android:layout_alignParentTop="true"
+	    android:visibility="gone" >
+
+		<TextView
+		    android:id="@+id/text_suggestion"
+		    android:layout_width="wrap_content"
+		    android:layout_height="48dp"
+		    android:layout_alignParentLeft="true"
+		    android:layout_alignParentRight="true"
+		    android:background="#191b52"
+		    android:gravity="center"
+		    android:text="@string/text_history"
+		    android:textColor="#ffffff"
+		    android:textSize="15sp"
+		    android:textStyle="bold" />
+
+		<ListView
+		    android:id="@+id/suggestion_list"
+		    android:layout_width="match_parent"
+		    android:layout_height="match_parent"
+		    android:layout_below="@+id/text_suggestion"
+		    android:divider="#dddddd"
+		    android:dividerHeight="1dp"
+		    android:paddingLeft="10dp"
+		    android:paddingRight="10dp" >
+
+		</ListView>
+
+	</RelativeLayout>
+
+</RelativeLayout>

@@ -5,7 +5,6 @@ import java.io.File;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.util.DisplayMetrics;
 
 /**
  * This class contains global methods for the whole application.
@@ -16,7 +15,7 @@ public class Utils {
 	
 	//Public constant & URLs
 	public final static String PREFS_NAME = "MyPrefsFile";
-	public final static String SEARCH_IMG_URL = "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&rsz=8&q=";
+	public final static String SEARCH_IMG_URL = "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&imgsz=small&as_filetype=png&rsz=8&q=";
 
 	/**
 	 * Default constructor
@@ -34,30 +33,6 @@ public class Utils {
 	        return true;
 	    }
 	    return false;
-	}
-	
-	/**
-	 * 
-	 * @param context
-	 * @param dp
-	 * @return
-	 */
-	public static int dpToPx(Context context, int dp) {
-	    DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
-	    int px = Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));       
-	    return px;
-	}
-	
-	/**
-	 * 
-	 * @param context
-	 * @param px
-	 * @return
-	 */
-	public static int pxToDp(Context context, int px) {
-		float scale = context.getResources().getDisplayMetrics().density;
-		int dpAsPixels = (int) (px*scale + 0.5f);
-		return dpAsPixels;
 	}
 	
 	/**

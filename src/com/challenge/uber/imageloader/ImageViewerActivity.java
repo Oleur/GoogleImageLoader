@@ -80,7 +80,7 @@ public class ImageViewerActivity extends FragmentActivity {
 					@Override
 					public void onPageSelected(int position) {
 						if (position == (pagerFrags.size()-1)) {
-							start++;
+							start += 8;
 							loadList();
 						}
 					}
@@ -216,7 +216,7 @@ public class ImageViewerActivity extends FragmentActivity {
 		@Override
 		protected Boolean doInBackground(String... params) {
 			try {
-				imgLoadJson = parser.fastGetRequest(Utils.SEARCH_IMG_URL+params[0]+"&start="+start+"&imgsz=medium");
+				imgLoadJson = parser.fastGetRequest(Utils.SEARCH_IMG_URL+params[0]+"&start="+start);
 				int len = imgLoadJson.getJSONObject("responseData").getJSONArray("results").length();
 				for (int i=0; i < len; i++) {
 					imagesData.getJSONObject("responseData").getJSONArray("results").put(

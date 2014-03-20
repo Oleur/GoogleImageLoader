@@ -24,6 +24,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
@@ -128,6 +129,8 @@ public class SearchImageActivity extends Activity implements OnScrollListener, O
 			public void onItemClick(AdapterView<?> parent, View view, int position, long arg3) {
 				query = suggestAdapter.getItem(position);
 				searchView.setQuery(query, false);
+				//Hide keyboard
+				getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 				//Hide the search list.
 				Animation slideDownOut = AnimationUtils.loadAnimation(SearchImageActivity.this, R.anim.slide_down_out);
 				searchContainer.startAnimation(slideDownOut);
@@ -137,8 +140,9 @@ public class SearchImageActivity extends Activity implements OnScrollListener, O
 				start = 0;
 				//Clear cache
 				Utils.trimCache(SearchImageActivity.this);
-				//Refresh the list.
-				loadImages(query.replace(" ", "%2B"));
+				//Refresh the list if online
+				if (Utils.isOnline(SearchImageActivity.this))
+					loadImages(query.replace(" ", "%2B"));
 			}
 		});
 		suggestAdapter.notifyDataSetChanged();
@@ -214,6 +218,7 @@ public class SearchImageActivity extends Activity implements OnScrollListener, O
 				searchContainer.setVisibility(View.VISIBLE);
 				getActionBar().setTitle("Hide History");
                 searchView.setQuery("", false);
+                searchView.onActionViewExpanded();
 			}
 		});
 	    searchView.setOnCloseListener(new OnCloseListener() {
@@ -227,6 +232,7 @@ public class SearchImageActivity extends Activity implements OnScrollListener, O
 				searchContainer.setVisibility(View.GONE);
 				getActionBar().setTitle("Show History");
 				searchView.setQuery("", false);
+				searchView.onActionViewCollapsed();
 				return false;
 			}
 		});
@@ -254,6 +260,7 @@ public class SearchImageActivity extends Activity implements OnScrollListener, O
 				mPullToRefreshLayout.setRefreshing(true);
 				emptyText.setVisibility(View.GONE);
 				loadImages(query.replace(" ", "%2B"));
+				searchView.onActionViewCollapsed();
                 return true;
             }
 
@@ -272,13 +279,12 @@ public class SearchImageActivity extends Activity implements OnScrollListener, O
 			if (searchContainer.getVisibility() == View.VISIBLE) {
 				//Hide history by clicking on the home menu
 				searchView.setQuery("", false);
-				//searchView.setIconified(true);
+				searchView.onActionViewCollapsed();
 				Animation slideDownOut = AnimationUtils.loadAnimation(SearchImageActivity.this, R.anim.slide_down_out);
 				searchContainer.startAnimation(slideDownOut);
 				searchContainer.setVisibility(View.GONE);
 				getActionBar().setTitle("Show History");
 			} else {
-				//searchView.setIconified(true);
 				Animation slideDownIn = AnimationUtils.loadAnimation(SearchImageActivity.this, R.anim.slide_down_in);
 				searchContainer.startAnimation(slideDownIn);
 				searchContainer.setVisibility(View.VISIBLE);
@@ -293,7 +299,7 @@ public class SearchImageActivity extends Activity implements OnScrollListener, O
 	public void onBackPressed() {
 	    if (closeFrag) {
 	    	searchView.setQuery("", false);
-	    	//searchView.setIconified(true);
+	    	searchView.onActionViewCollapsed();
 	    	Animation slideDownOut = AnimationUtils.loadAnimation(SearchImageActivity.this, R.anim.slide_down_out);
 			searchContainer.startAnimation(slideDownOut);
 			searchContainer.setVisibility(View.GONE);
@@ -329,7 +335,7 @@ public class SearchImageActivity extends Activity implements OnScrollListener, O
 		} else {
 			try {
 				imgTask = new LoadImagesTask();
-				imgTask.execute(query);
+				imgTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, query);
 			} catch (Exception e) {
 				Toast.makeText(this, "Enable to load images...", Toast.LENGTH_SHORT).show();
 			}
@@ -349,17 +355,16 @@ public class SearchImageActivity extends Activity implements OnScrollListener, O
 		protected Boolean doInBackground(String... params) {
 			try {
 				if (start == 0) {
-					imgObject = parser.fastGetRequest(Utils.SEARCH_IMG_URL+params[0]+"&start="+start+"&imgsz=medium");
+					imgObject = parser.fastGetRequest(Utils.SEARCH_IMG_URL+params[0]+"&start="+start);
 				} else {
-					loadJson = parser.fastGetRequest(Utils.SEARCH_IMG_URL+params[0]+"&start="+start+"&imgsz=medium");
+					loadJson = parser.fastGetRequest(Utils.SEARCH_IMG_URL+params[0]+"&start="+start);
 					int len = loadJson.getJSONObject("responseData").getJSONArray("results").length();
 					try {
 						for (int i=0; i < len; i++) {
 							imgObject.getJSONObject("responseData").getJSONArray("results").put(
 									loadJson.getJSONObject("responseData").getJSONArray("results").getJSONObject(i));
 						}
-					} catch (JSONException e) {
-						e.printStackTrace();
+					} catch (Exception e) {
 						return false;
 					}
 				}
@@ -390,7 +395,7 @@ public class SearchImageActivity extends Activity implements OnScrollListener, O
 				    	if (imgAdapter.getCount() == 0) {
 				    		imgResGrid.setOnScrollListener(null);
 				    		emptyText.setVisibility(View.VISIBLE);
-				    		emptyText.setText("Images unavailable car null!");
+				    		emptyText.setText("No images found!");
 				    	} else {
 				    		emptyText.setVisibility(View.GONE);
 				    		imgResGrid.setOnScrollListener(SearchImageActivity.this);
@@ -423,9 +428,9 @@ public class SearchImageActivity extends Activity implements OnScrollListener, O
 		int lastInScreen = firstVisibleItem + visibleItemCount;
 		//If load more true and you reach the end of the list, then load more images.
 		if ((lastInScreen == totalItemCount) && loadMore) {
-			if (query != null) {
+			if (query != null && Utils.isOnline(this)) {
 				loadMore = false;
-	    		start++;
+	    		start += 8;
 	    		mPullToRefreshLayout.setRefreshing(true);
     			loadImages(query.replace(" ", "%2B"));
 			}
@@ -437,6 +442,18 @@ public class SearchImageActivity extends Activity implements OnScrollListener, O
 
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View view, int position, long id) {
+		//Hide search and history features
+		if (searchContainer.getVisibility() == View.VISIBLE) {
+			//Clear search bar
+			searchView.setQuery("", false);
+			searchView.onActionViewCollapsed();
+			//Close container with a sliding animation
+			Animation slideDownOut = AnimationUtils.loadAnimation(SearchImageActivity.this, R.anim.slide_down_out);
+			searchContainer.startAnimation(slideDownOut);
+			searchContainer.setVisibility(View.GONE);
+			getActionBar().setTitle("Show History");
+		}
+		//Open the image viewer activity
 		Intent imageViewerIntent = new Intent(this, ImageViewerActivity.class);
 		try {
 			imageViewerIntent.putExtra("images_data", imgObject.toString());
